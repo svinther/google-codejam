@@ -1,5 +1,6 @@
 import sys
-from functools import reduce
+from collections import deque
+from functools import reduce, lru_cache
 from io import StringIO
 from itertools import permutations
 from operator import add
@@ -21,13 +22,6 @@ def get_cost(fromstate, tostate):
     return len(t) - len(f)
 
 
-def findmin(S, s):
-    if not S:
-        return 0
-
-    return min(get_cost(s, sn) + findmin(S[1:], sn) for sn in S[0])
-
-
 def solve(input_):
     numtc = int(input_.readline())
     for tc in range(numtc):
@@ -47,7 +41,14 @@ def solve(input_):
             S.append(wcombos)
         S.append({endstate})
 
-        print(f"Case #{tc + 1}:", findmin(S, startstate))
+        @lru_cache(maxsize=None)
+        def findmin(e, s):
+            if e == len(S):
+                return 0
+
+            return min(get_cost(s, sn) + findmin(e + 1, sn) for sn in S[e])
+
+        print(f"Case #{tc + 1}:", findmin(0, startstate))
 
 
 def test1():
